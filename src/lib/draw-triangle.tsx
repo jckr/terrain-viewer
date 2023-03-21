@@ -46,7 +46,7 @@ export function drawTriangle(
 
   // Blend the base color with the light color based on the lighting value
   const color = blendColors(baseColor, lightColor, lighting);
-
+  // console.log(points);
   // Draw the triangle with the final color
   context.beginPath();
   context.moveTo(points[0].x, points[0].y);
