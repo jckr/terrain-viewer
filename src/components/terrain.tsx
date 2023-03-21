@@ -12,7 +12,10 @@ function renderTerrain(
   scale: number = 0.5,
   lightDirection: [number, number, number] = [0.5, 0.5, 0.5],
   lightIntensity: number = 0.5,
-  lightColor: string = '#fff'
+  lightColor: string = '#fffffff',
+  waterLevel: number = 0,
+  waterBaseColor: string = '#0000ff',
+  landBaseColor: string = '#00ff00'
 ) {
   const size = terrain.length;
   const tileSize = 32;
@@ -35,20 +38,40 @@ function renderTerrain(
       const y = tileSize * j;
 
       const points = [
-        isoTransform(x, terrain[i][j] * heightScale, y),
-        isoTransform(x + tileSize, terrain[i + 1][j] * heightScale, y),
-        isoTransform(x, terrain[i][j + 1] * heightScale, y + tileSize),
+        isoTransform(x, Math.max(terrain[i][j] * heightScale, waterLevel), y),
         isoTransform(
           x + tileSize,
-          terrain[i + 1][j + 1] * heightScale,
+          Math.max(terrain[i + 1][j] * heightScale, waterLevel),
+          y
+        ),
+        isoTransform(
+          x,
+          Math.max(terrain[i][j + 1] * heightScale, waterLevel),
+          y + tileSize
+        ),
+        isoTransform(
+          x + tileSize,
+          Math.max(terrain[i + 1][j + 1] * heightScale, waterLevel),
           y + tileSize
         ),
       ];
 
+      // Determine the base color for each triangle based on the altitude
+      const baseColor1 =
+        (terrain[i][j] + terrain[i + 1][j] + terrain[i][j + 1]) / 3 <=
+        waterLevel
+          ? waterBaseColor
+          : landBaseColor;
+      const baseColor2 =
+        (terrain[i + 1][j] + terrain[i][j + 1] + terrain[i + 1][j + 1]) / 3 <=
+        waterLevel
+          ? waterBaseColor
+          : landBaseColor;
+
       drawTriangle(
         context,
         [points[0], points[1], points[2]],
-        '#008000',
+        baseColor1,
         lightColor,
         lightDirection,
         lightIntensity
@@ -56,7 +79,7 @@ function renderTerrain(
       drawTriangle(
         context,
         [points[1], points[2], points[3]],
-        '#008000',
+        baseColor2,
         lightColor,
         lightDirection,
         lightIntensity
@@ -67,15 +90,19 @@ function renderTerrain(
 
 interface TerrainProps {
   seed?: number;
-  scaleFactor?: number;
-  alpha: number;
-  canvasHeight: number;
   canvasWidth: number;
-  cells: number;
-  scale: number;
+  canvasHeight: number;
+  terrainSize: number;
+  scaleFactor: number;
+  alpha: number;
   lightDirection: [number, number, number];
   lightColor: string;
   lightIntensity: number;
+  waterLevel: number;
+  landBaseColor: string;
+  waterBaseColor: string;
+  cells: number;
+  scale: number;
 }
 
 export const Terrain: React.FC<TerrainProps> = ({
@@ -89,6 +116,9 @@ export const Terrain: React.FC<TerrainProps> = ({
   lightDirection,
   lightColor,
   lightIntensity,
+  waterLevel,
+  landBaseColor,
+  waterBaseColor,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [terrain, setTerrain] = useState<number[][]>([]);
@@ -111,7 +141,10 @@ export const Terrain: React.FC<TerrainProps> = ({
         scale,
         lightDirection,
         lightIntensity,
-        lightColor
+        lightColor,
+        waterLevel,
+        landBaseColor,
+        waterBaseColor
       );
     }
   }, [
@@ -123,6 +156,9 @@ export const Terrain: React.FC<TerrainProps> = ({
     lightDirection,
     lightIntensity,
     lightColor,
+    waterLevel,
+    landBaseColor,
+    waterBaseColor,
   ]);
 
   return (
