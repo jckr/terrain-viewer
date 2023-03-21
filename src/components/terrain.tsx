@@ -14,8 +14,8 @@ function renderTerrain(
   lightIntensity: number = 0.5,
   lightColor: string = '#fffffff',
   waterLevel: number = 0,
-  waterBaseColor: string = '#0000ff',
-  landBaseColor: string = '#00ff00'
+  waterBaseColor: string = '#0077be',
+  landBaseColor: string = '#228b22'
 ) {
   const size = terrain.length;
   const tileSize = 32;
