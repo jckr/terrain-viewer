@@ -6,25 +6,37 @@ import { drawTriangle } from '@/lib/draw-triangle';
 function renderTerrain(
   context: CanvasRenderingContext2D,
   terrain: number[][],
-  alpha: number,
-  canvasWidth: number,
-  canvasHeight: number,
-  scale: number = 0.5,
-  lightDirection: [number, number, number] = [0.5, 0.5, 0.5],
-  lightIntensity: number = 0.5,
-  lightColor: string = '#fffffff',
-  waterLevel: number = 0,
-  waterBaseColor: string = '#0077be',
-  landBaseColor: string = '#228b22'
+  {
+    alpha,
+    canvasWidth,
+    canvasHeight,
+    heightScaleFactor,
+    lightDirection,
+    lightIntensity,
+    lightColor,
+    scale,
+    waterLevel,
+    waterBaseColor,
+    landBaseColor,
+  }: {
+    alpha: number;
+    canvasWidth: number;
+    canvasHeight: number;
+    heightScaleFactor: number;
+    lightDirection: [number, number, number];
+    lightIntensity: number;
+    lightColor: string;
+    scale: number;
+    waterLevel: number;
+    waterBaseColor: string;
+    landBaseColor: string;
+  }
 ) {
   const size = terrain.length;
-  const tileSize = 32;
-  const heightScale = 100;
+  const tileSize = Math.max(canvasWidth, canvasHeight) / size;
 
   context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-  context.fillStyle = '#fff';
   context.lineWidth = 0;
-  // context.lineWidth = 2 * scale;
   const isoTransform = createIsoTransform(
     alpha,
     canvasWidth,
@@ -38,20 +50,24 @@ function renderTerrain(
       const y = tileSize * j;
 
       const points = [
-        isoTransform(x, Math.max(terrain[i][j] * heightScale, waterLevel), y),
+        isoTransform(
+          x,
+          Math.max(terrain[i][j] * heightScaleFactor, waterLevel),
+          y
+        ),
         isoTransform(
           x + tileSize,
-          Math.max(terrain[i + 1][j] * heightScale, waterLevel),
+          Math.max(terrain[i + 1][j] * heightScaleFactor, waterLevel),
           y
         ),
         isoTransform(
           x,
-          Math.max(terrain[i][j + 1] * heightScale, waterLevel),
+          Math.max(terrain[i][j + 1] * heightScaleFactor, waterLevel),
           y + tileSize
         ),
         isoTransform(
           x + tileSize,
-          Math.max(terrain[i + 1][j + 1] * heightScale, waterLevel),
+          Math.max(terrain[i + 1][j + 1] * heightScaleFactor, waterLevel),
           y + tileSize
         ),
       ];
@@ -94,6 +110,7 @@ interface TerrainProps {
   canvasHeight: number;
   terrainSize: number;
   scaleFactor: number;
+  heightScaleFactor: number;
   alpha: number;
   lightDirection: [number, number, number];
   lightColor: string;
@@ -101,7 +118,6 @@ interface TerrainProps {
   waterLevel: number;
   landBaseColor: string;
   waterBaseColor: string;
-  cells: number;
   scale: number;
 }
 
@@ -111,7 +127,8 @@ export const Terrain: React.FC<TerrainProps> = ({
   alpha,
   canvasHeight = 600,
   canvasWidth = 800,
-  cells,
+  terrainSize = 32,
+  heightScaleFactor = 100,
   scale = 1,
   lightDirection,
   lightColor,
@@ -125,27 +142,26 @@ export const Terrain: React.FC<TerrainProps> = ({
 
   useEffect(() => {
     const terrainGenerator = new TerrainGenerator(seed, scaleFactor);
-    const generatedTerrain = terrainGenerator.generate(cells);
+    const generatedTerrain = terrainGenerator.generate(terrainSize);
     setTerrain(generatedTerrain);
-  }, [seed, cells, scaleFactor]);
+  }, [seed, terrainSize, scaleFactor]);
 
   useEffect(() => {
     const context = canvasRef.current?.getContext('2d');
     if (context) {
-      renderTerrain(
-        context,
-        terrain,
+      renderTerrain(context, terrain, {
         alpha,
         canvasWidth,
         canvasHeight,
-        scale,
+        heightScaleFactor,
+        landBaseColor,
         lightDirection,
         lightIntensity,
         lightColor,
+        scale,
+        waterBaseColor,
         waterLevel,
-        landBaseColor,
-        waterBaseColor
-      );
+      });
     }
   }, [
     terrain,
@@ -153,6 +169,7 @@ export const Terrain: React.FC<TerrainProps> = ({
     canvasWidth,
     canvasHeight,
     scale,
+    heightScaleFactor,
     lightDirection,
     lightIntensity,
     lightColor,
