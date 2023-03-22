@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SketchPicker } from 'react-color';
 import { Terrain } from '@/components/terrain';
 
 interface State {
@@ -7,6 +8,9 @@ interface State {
   terrainSize: number;
   alpha: number;
   scale: number;
+  landBaseColor: string;
+  waterBaseColor: string;
+  lightColor: string;
 }
 
 type Action =
@@ -14,7 +18,10 @@ type Action =
   | { type: 'SET_HEIGHT_SCALE_FACTOR'; payload: number }
   | { type: 'SET_TERRAIN_SIZE'; payload: number }
   | { type: 'SET_ALPHA'; payload: number }
-  | { type: 'SET_SCALE'; payload: number };
+  | { type: 'SET_SCALE'; payload: number }
+  | { type: 'SET_LAND_BASE_COLOR'; color: string }
+  | { type: 'SET_WATER_BASE_COLOR'; color: string }
+  | { type: 'SET_LIGHT_COLOR'; color: string };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -28,6 +35,12 @@ function reducer(state: State, action: Action): State {
       return { ...state, alpha: action.payload };
     case 'SET_SCALE':
       return { ...state, scale: action.payload };
+    case 'SET_LAND_BASE_COLOR':
+      return { ...state, landBaseColor: action.color };
+    case 'SET_WATER_BASE_COLOR':
+      return { ...state, waterBaseColor: action.color };
+    case 'SET_LIGHT_COLOR':
+      return { ...state, lightColor: action.color };
     default:
       return state;
   }
@@ -39,11 +52,23 @@ const initialState: State = {
   terrainSize: 64,
   alpha: 100,
   scale: 0.5,
+  landBaseColor: '#228b22',
+  waterBaseColor: '#0077be',
+  lightColor: '#ffff88',
 };
 
 const TerrainPage: React.FC = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
-  const { alpha, heightScaleFactor, terrainSize, scale, waterLevel } = state;
+  const {
+    alpha,
+    heightScaleFactor,
+    terrainSize,
+    scale,
+    waterLevel,
+    landBaseColor,
+    lightColor,
+    waterBaseColor,
+  } = state;
 
   const handleAlphaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: 'SET_ALPHA', payload: parseFloat(event.target.value) });
@@ -83,23 +108,35 @@ const TerrainPage: React.FC = () => {
     });
   };
 
+  const handleLandBaseColorChange = (color: { hex: string }) => {
+    dispatch({ type: 'SET_LAND_BASE_COLOR', color: color.hex });
+  };
+
+  const handleWaterBaseColorChange = (color: { hex: string }) => {
+    dispatch({ type: 'SET_WATER_BASE_COLOR', color: color.hex });
+  };
+
+  const handleLightColorChange = (color: { hex: string }) => {
+    dispatch({ type: 'SET_LIGHT_COLOR', color: color.hex });
+  };
+
   return (
     <div>
       <Terrain
         canvasHeight={600}
         canvasWidth={800}
-        seed={12345}
+        // seed={12345}
         alpha={alpha}
         scale={scale}
         terrainSize={terrainSize}
         scaleFactor={10}
         heightScaleFactor={heightScaleFactor}
         lightDirection={[0.5, 0.5, 0.5]}
-        lightColor={'#ffff00'}
+        lightColor={lightColor}
         lightIntensity={0.5}
         waterLevel={waterLevel}
-        landBaseColor={'#228b22'}
-        waterBaseColor={'#0077be'}
+        landBaseColor={landBaseColor}
+        waterBaseColor={waterBaseColor}
       />
       <div>
         <label htmlFor='alpha'>Alpha:</label>
@@ -173,6 +210,39 @@ const TerrainPage: React.FC = () => {
           onChange={handleWaterLevelChange}
         />
         <span>{waterLevel.toFixed(1)}</span>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: '16px',
+        }}
+      >
+        <div>
+          <p>Land Base Color</p>
+          <SketchPicker
+            color={state.landBaseColor}
+            onChangeComplete={handleLandBaseColorChange}
+          />
+        </div>
+
+        <div>
+          <p>Water Base Color</p>
+          <SketchPicker
+            color={state.waterBaseColor}
+            onChangeComplete={handleWaterBaseColorChange}
+          />
+        </div>
+
+        <div>
+          <p>Light Color</p>
+          <SketchPicker
+            color={state.lightColor}
+            onChangeComplete={handleLightColorChange}
+          />
+        </div>
       </div>
     </div>
   );
